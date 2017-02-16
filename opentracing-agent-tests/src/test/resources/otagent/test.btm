@@ -1,0 +1,21 @@
+
+RULE Test Start Instrumentation
+CLASS io.opentracing.contrib.agent.tests.OkHttpToServletITest
+METHOD sayHello()
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+AT ENTRY
+IF TRUE
+DO
+  manageSpan(getTracer().buildSpan("TestSpan").start());
+ENDRULE
+
+RULE Test Finish Instrumentation
+CLASS io.opentracing.contrib.agent.tests.OkHttpToServletITest
+METHOD sayHello()
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+AT EXIT
+IF currentSpan() != null
+DO
+  currentSpan().setTag("status.code","OK").finish();
+  releaseSpan();
+ENDRULE
