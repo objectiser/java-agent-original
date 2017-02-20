@@ -1,6 +1,6 @@
 
-RULE Test Start Instrumentation
-CLASS io.opentracing.contrib.agent.tests.OkHttpToServletITest
+RULE Custom instrumentation rule sayHello entry
+CLASS io.opentracing.contrib.agent.custom.CustomRuleITest
 METHOD sayHello()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
@@ -9,13 +9,13 @@ DO
   manageSpan(getTracer().buildSpan("TestSpan").start());
 ENDRULE
 
-RULE Test Finish Instrumentation
-CLASS io.opentracing.contrib.agent.tests.OkHttpToServletITest
+RULE Custom instrumentation rule sayHello exit
+CLASS io.opentracing.contrib.agent.custom.CustomRuleITest
 METHOD sayHello()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT EXIT
 IF currentSpan() != null
 DO
   currentSpan().setTag("status.code","OK").finish();
-  releaseSpan();
+  releaseCurrentSpan();
 ENDRULE

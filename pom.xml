@@ -36,7 +36,7 @@
 
   <modules>
     <module>opentracing-agent</module>
-    <module>opentracing-agent-tests</module>
+    <module>opentracing-agent-itests</module>
   </modules>
 
   <properties>

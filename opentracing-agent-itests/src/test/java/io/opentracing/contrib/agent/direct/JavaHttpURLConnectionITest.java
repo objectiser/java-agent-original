@@ -24,15 +24,39 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import io.opentracing.contrib.agent.common.HttpTestBase;
+import io.opentracing.contrib.agent.common.OTAgentTestBase;
 import io.opentracing.mock.MockSpan;
 import io.opentracing.tag.Tags;
 
-public class JavaHttpURLConnectionITest extends HttpTestBase {
+public class JavaHttpURLConnectionITest extends OTAgentTestBase {
 
-    private static final String SAY_HELLO_URL = "http://localhost:8180/sayHello";
+    private static final String SAY_HELLO_URL = "http://localhost:8180/hello";
+
+    private static Server server = null;
+
+    public static final String TEST_FAULT_HEADER_FLAG = "test-fault";
+
+    @BeforeClass
+    public static void initClass() throws Exception {
+        server = new Server(8180);
+        server.setHandler(new HelloHandler());
+        server.start();
+    }
+
+    @AfterClass
+    public static void closeClass() throws Exception {
+        server.stop();
+    }
 
     @Test
     public void testHttpURLConnectionConnectGET() throws IOException {
@@ -156,6 +180,22 @@ public class JavaHttpURLConnectionITest extends HttpTestBase {
         assertEquals(method, spans.get(0).operationName());
         assertEquals(url.toString(), spans.get(0).tags().get(Tags.HTTP_URL.getKey()));
         assertEquals(fault ? 401 : 200, spans.get(0).tags().get(Tags.HTTP_STATUS.getKey()));
+    }
+
+    public static class HelloHandler extends AbstractHandler {
+        
+        @Override
+        public void handle(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest request,
+                HttpServletResponse response) throws IOException, ServletException {
+            response.setContentType("text/html;charset=utf-8");
+            if (request.getHeader(TEST_FAULT_HEADER_FLAG) != null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            } else {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().println("<h1>Hello World</h1>");                
+            }
+            baseRequest.setHandled(true);
+        }
     }
 
 }

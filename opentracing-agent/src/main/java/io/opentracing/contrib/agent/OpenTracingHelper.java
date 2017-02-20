@@ -62,7 +62,7 @@ public class OpenTracingHelper extends Helper {
         return spanManager.current().getSpan();
     }
 
-    public Span releaseSpan() {
+    public Span releaseCurrentSpan() {
         ManagedSpan current = spanManager.current();
         current.release();
         return current.getSpan();

@@ -26,14 +26,12 @@ public class OpenTracingAgent {
 
     public static void premain(String agentArgs, Instrumentation inst) throws Exception {
         agentArgs = addManager(agentArgs);
-        initProperties();
 
         org.jboss.byteman.agent.Main.premain(agentArgs, inst);
     }
 
     public static void agentmain(String agentArgs, Instrumentation inst) throws Exception {
         agentArgs = addManager(agentArgs);
-        initProperties();
 
         org.jboss.byteman.agent.Main.agentmain(agentArgs, inst);
     }
@@ -44,12 +42,9 @@ public class OpenTracingAgent {
         } else {
             agentArgs += ",";
         }
-        agentArgs += "manager:io.opentracing.contrib.agent.OpenTracingManager";
+        agentArgs += "manager:"+io.opentracing.contrib.agent.OpenTracingManager.class.getName();
 
         return agentArgs;
     }
 
-    protected static void initProperties() {
-        System.setProperty("org.jboss.byteman.transform.all", "");
-    }
 }

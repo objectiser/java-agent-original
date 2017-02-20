@@ -44,7 +44,7 @@ import org.jboss.byteman.agent.Retransformer;
  */
 public class OpenTracingManager {
 
-	private static Logger log = Logger.getLogger(OpenTracingManager.class.getName());
+    private static Logger log = Logger.getLogger(OpenTracingManager.class.getName());
 
     private static final String RULE_FILE_EXTENSION = ".btm";
     private static final String ROOT_RULE_FOLDER = "otagent";
@@ -113,23 +113,23 @@ public class OpenTracingManager {
 
                 Files.walkFileTree(rules, new SimpleFileVisitor<Path>() {
 
-					@Override
-					public FileVisitResult visitFile(Path path, BasicFileAttributes arg1) throws IOException {
-						if (path.toString().endsWith(RULE_FILE_EXTENSION)) {
-		                    try {
-		                        if (log.isLoggable(Level.FINE)) {
-		                            log.fine("Loading rules: " + path.toString());
-		                        }
-		                        scripts.add(new String(Files.readAllBytes(path)));
-		                        scriptNames.add(path.toString());
-		                    } catch (IOException ioe) {
-		                        log.log(Level.SEVERE, "Failed to load rule file: " + path.toString(), ioe);
-		                    }
-						}
-						return FileVisitResult.CONTINUE;
-					}
+                    @Override
+                    public FileVisitResult visitFile(Path path, BasicFileAttributes arg1) throws IOException {
+                        if (path.toString().endsWith(RULE_FILE_EXTENSION)) {
+                            try {
+                                if (log.isLoggable(Level.FINE)) {
+                                    log.fine("Loading rules: " + path.toString());
+                                }
+                                scripts.add(new String(Files.readAllBytes(path)));
+                                scriptNames.add(path.toString());
+                            } catch (IOException ioe) {
+                                log.log(Level.SEVERE, "Failed to load rule file: " + path.toString(), ioe);
+                            }
+                        }
+                        return FileVisitResult.CONTINUE;
+                    }
                 });
-                
+
             } finally {
                 // If created filesystem, then we need to close it
                 if (separator != -1) {
@@ -138,4 +138,5 @@ public class OpenTracingManager {
             }
         }
     }
+
 }

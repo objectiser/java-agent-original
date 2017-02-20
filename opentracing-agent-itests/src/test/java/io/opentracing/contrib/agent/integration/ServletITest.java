@@ -14,9 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentracing.contrib.agent.common;
+package io.opentracing.contrib.agent.integration;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -25,26 +29,28 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import io.opentracing.contrib.global.GlobalTracer;
-import io.opentracing.mock.MockTracer;
-import io.opentracing.mock.MockTracer.Propagator;
+import org.junit.Test;
+
+import io.opentracing.contrib.agent.common.OTAgentTestBase;
+import io.opentracing.mock.MockSpan;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  * @author gbrown
  */
-public class HttpTestBase {
+public class ServletITest extends OTAgentTestBase {
+
+    private static final String HELLO_URL = "http://localhost:8180/hello";
 
     private static Server server = null;
-    private static MockTracer tracer = new MockTracer(Propagator.TEXT_MAP);
 
     public static final String TEST_FAULT_HEADER_FLAG = "test-fault";
 
     @BeforeClass
     public static void initClass() throws Exception {
-        GlobalTracer.register(tracer);
-
         server = new Server(8180);
         server.setHandler(new HelloHandler());
         server.start();
@@ -55,13 +61,36 @@ public class HttpTestBase {
         server.stop();
     }
 
-    @Before
-    public void init() {
-        tracer.reset();
+    @Test @org.junit.Ignore
+    public void testRequest() throws IOException {
+        sayHello();
+        
+        List<MockSpan> spans = getTracer().finishedSpans();
+        for (MockSpan span: spans) {
+            System.out.println("SPAN op="+span.operationName()+" tags="+span.tags());
+        }
+        
+        assertEquals(2, spans.size());
+        assertEquals("GET", spans.get(0).operationName());
+        assertEquals("TestSpan", spans.get(1).operationName());
+        assertTrue(spans.get(1).tags().containsKey("status.code"));
+        
+        // TODO: The spans don't have a parent/child relationship yet - need to use
+        // span manager to avoid integration specific mechanisms
     }
 
-    public MockTracer getTracer() {
-        return tracer;
+    public void sayHello() throws IOException {
+        // TODO: Rule does not currently work when just using the OkHttpClient default constructor
+        OkHttpClient client = new OkHttpClient.Builder()
+                .build();
+
+        Request request = new Request.Builder()
+              .url(HELLO_URL)
+              .build();
+
+        Response response = client.newCall(request).execute();
+        
+        assertEquals(200, response.code());
     }
 
     public static class HelloHandler extends AbstractHandler {
