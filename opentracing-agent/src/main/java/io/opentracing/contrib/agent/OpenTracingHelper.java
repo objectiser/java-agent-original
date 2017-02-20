@@ -16,6 +16,10 @@
  */
 package io.opentracing.contrib.agent;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.WeakHashMap;
+
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 
@@ -33,6 +37,9 @@ public class OpenTracingHelper extends Helper {
 
     private Tracer tracer = GlobalTracer.get();
     private SpanManager spanManager = DefaultSpanManager.getInstance();
+
+    private static Map<Object,Span> spanCache = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
+    private static Map<Object,Span> finished = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
 
     public OpenTracingHelper(Rule rule) {
         super(rule);
@@ -60,5 +67,24 @@ public class OpenTracingHelper extends Helper {
         current.release();
         return current.getSpan();
     }
+
+    public void cacheSpan(Object key, Span span) {
+        spanCache.put(key, span);
+    }
+
+    public Span retrieveSpan(Object key) {
+        return spanCache.get(key);
+    }
+
+    /**********************************************/
+    /** Needs to be replaced by span.isFinished() */
+    public void finishedSpan(Object key, Span span) {
+        finished.put(key, span);
+    }
+
+    public boolean isFinished(Object key) {
+        return finished.containsKey(key);
+    }
+    /**********************************************/
 
 }

@@ -14,10 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentracing.contrib.agent.tests;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+package io.opentracing.contrib.agent.common;
 
 import java.io.IOException;
 
@@ -28,25 +25,21 @@ import javax.servlet.http.HttpServletResponse;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
-
 import io.opentracing.contrib.global.GlobalTracer;
 import io.opentracing.mock.MockTracer;
 import io.opentracing.mock.MockTracer.Propagator;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * @author gbrown
  */
-public class OkHttpToServletITest {
-
-    private static final String HELLO_URL = "http://localhost:8180/hello";
+public class HttpTestBase {
 
     private static Server server = null;
     private static MockTracer tracer = new MockTracer(Propagator.TEXT_MAP);
+
+    public static final String TEST_FAULT_HEADER_FLAG = "test-fault";
 
     @BeforeClass
     public static void initClass() throws Exception {
@@ -62,30 +55,13 @@ public class OkHttpToServletITest {
         server.stop();
     }
 
-    @Test
-    public void testRequest() throws IOException {
-        sayHello();
-        assertEquals(2, tracer.finishedSpans().size());
-        assertEquals("GET", tracer.finishedSpans().get(0).operationName());
-        assertEquals("TestSpan", tracer.finishedSpans().get(1).operationName());
-        assertTrue(tracer.finishedSpans().get(1).tags().containsKey("status.code"));
-        
-        // TODO: The spans don't have a parent/child relationship yet - need to use
-        // span manager to avoid integration specific mechanisms
+    @Before
+    public void init() {
+        tracer.reset();
     }
 
-    public void sayHello() throws IOException {
-        // TODO: Rule does not currently work when just using the OkHttpClient default constructor
-        OkHttpClient client = new OkHttpClient.Builder()
-                .build();
-
-        Request request = new Request.Builder()
-              .url(HELLO_URL)
-              .build();
-
-        Response response = client.newCall(request).execute();
-        
-        assertEquals(200, response.code());
+    public MockTracer getTracer() {
+        return tracer;
     }
 
     public static class HelloHandler extends AbstractHandler {
@@ -94,9 +70,13 @@ public class OkHttpToServletITest {
         public void handle(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest request,
                 HttpServletResponse response) throws IOException, ServletException {
             response.setContentType("text/html;charset=utf-8");
-            response.setStatus(HttpServletResponse.SC_OK);
+            if (request.getHeader(TEST_FAULT_HEADER_FLAG) != null) {
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            } else {
+                response.setStatus(HttpServletResponse.SC_OK);
+                response.getWriter().println("<h1>Hello World</h1>");                
+            }
             baseRequest.setHandled(true);
-            response.getWriter().println("<h1>Hello World</h1>");
         }
     }
 
