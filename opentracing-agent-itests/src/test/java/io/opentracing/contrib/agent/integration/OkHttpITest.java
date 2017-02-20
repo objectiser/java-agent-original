@@ -21,77 +21,49 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.List;
 
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import io.opentracing.mock.MockSpan;
+import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 /**
  * @author gbrown
  */
 public class OkHttpITest extends io.opentracing.contrib.agent.common.OTAgentTestBase {
 
-    private static final String HELLO_URL = "http://localhost:8180/hello";
-
-    private static Server server = null;
-
-    public static final String TEST_FAULT_HEADER_FLAG = "test-fault";
-
-    @BeforeClass
-    public static void initClass() throws Exception {
-        server = new Server(8180);
-        server.setHandler(new HelloHandler());
-        server.start();
-    }
-
-    @AfterClass
-    public static void closeClass() throws Exception {
-        server.stop();
-    }
-
     @Test
     public void testRequest() throws IOException {
-        // TODO: Rule does not currently work when just using the OkHttpClient default constructor
-        OkHttpClient client = new OkHttpClient.Builder()
-                .build();
+        MockWebServer server = new MockWebServer();
 
-        Request request = new Request.Builder()
-              .url(HELLO_URL)
-              .build();
+        try {
+            server.enqueue(new MockResponse().setBody("hello, world!").setResponseCode(200));
 
-        Response response = client.newCall(request).execute();
-        
-        assertEquals(200, response.code());
-        
-        List<MockSpan> spans = getTracer().finishedSpans();
-        
-        assertEquals(1, spans.size());
-        assertEquals("GET", spans.get(0).operationName());
-    }
+            HttpUrl httpUrl = server.url("/hello");
 
-    public static class HelloHandler extends AbstractHandler {
-        
-        @Override
-        public void handle(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest request,
-                HttpServletResponse response) throws IOException, ServletException {
-            response.setContentType("text/html;charset=utf-8");
-            if (request.getHeader(TEST_FAULT_HEADER_FLAG) != null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            } else {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().println("<h1>Hello World</h1>");                
-            }
-            baseRequest.setHandled(true);
+            // TODO: Rule does not currently work when just using the OkHttpClient default constructor
+            OkHttpClient client = new OkHttpClient.Builder()
+                    .build();
+
+            Request request = new Request.Builder()
+                  .url(httpUrl)
+                  .build();
+
+            Response response = client.newCall(request).execute();
+
+            assertEquals(200, response.code());
+
+            List<MockSpan> spans = getTracer().finishedSpans();
+
+            assertEquals(1, spans.size());
+            assertEquals("GET", spans.get(0).operationName());
+        } finally {
+            server.shutdown();
+            server.close();
         }
     }
 
