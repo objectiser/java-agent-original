@@ -103,6 +103,11 @@
         <version>${version.com.squareup.okhttp3}</version>
       </dependency>
       <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>mockwebserver</artifactId>
+        <version>${version.com.squareup.okhttp3}</version>
+      </dependency>
+      <dependency>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-server</artifactId>
         <version>${version.org.eclipse.jetty}</version>
