@@ -17,23 +17,21 @@
 package io.opentracing.contrib.agent.integration;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.IOException;
-import java.util.List;
-
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.AbstractHandler;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import io.opentracing.contrib.agent.common.OTAgentTestBase;
-import io.opentracing.mock.MockSpan;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -43,69 +41,56 @@ import okhttp3.Response;
  */
 public class ServletITest extends OTAgentTestBase {
 
-    private static final String HELLO_URL = "http://localhost:8180/hello";
+    // jetty starts on random port
+    private int serverPort;
 
-    private static Server server = null;
+    protected Server jettyServer;
 
-    public static final String TEST_FAULT_HEADER_FLAG = "test-fault";
+    @Before
+    public void beforeTest() throws Exception {
+        ServletContextHandler servletContext = new ServletContextHandler();
+        servletContext.setContextPath("/");
+        servletContext.addServlet(TestServlet.class, "/hello");
 
-    @BeforeClass
-    public static void initClass() throws Exception {
-        server = new Server(8180);
-        server.setHandler(new HelloHandler());
-        server.start();
+        jettyServer = new Server(0);
+        jettyServer.setHandler(servletContext);
+        jettyServer.start();
+        serverPort = ((ServerConnector)jettyServer.getConnectors()[0]).getLocalPort();
     }
 
-    @AfterClass
-    public static void closeClass() throws Exception {
-        server.stop();
+    @After
+    public void afterTest() throws Exception {
+        jettyServer.stop();
+        jettyServer.join();
     }
 
-    @Test @org.junit.Ignore
-    public void testRequest() throws IOException {
-        sayHello();
-        
-        List<MockSpan> spans = getTracer().finishedSpans();
-        for (MockSpan span: spans) {
-            System.out.println("SPAN op="+span.operationName()+" tags="+span.tags());
+    public String localRequestUrl(String path) {
+        return "http://localhost:" + serverPort + path;
+    }
+
+    @Test
+    public void testHelloRequest() throws IOException {
+        {
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(localRequestUrl("/hello"))
+                    .build();
+
+            Response response = client.newCall(request).execute();
+            
+            assertEquals(HttpServletResponse.SC_ACCEPTED, response.code());
         }
-        
-        assertEquals(2, spans.size());
-        assertEquals("GET", spans.get(0).operationName());
-        assertEquals("TestSpan", spans.get(1).operationName());
-        assertTrue(spans.get(1).tags().containsKey("status.code"));
-        
-        // TODO: The spans don't have a parent/child relationship yet - need to use
-        // span manager to avoid integration specific mechanisms
+
+        Assert.assertEquals(1, getTracer().finishedSpans().size());
     }
 
-    public void sayHello() throws IOException {
-        // TODO: Rule does not currently work when just using the OkHttpClient default constructor
-        OkHttpClient client = new OkHttpClient.Builder()
-                .build();
+    @SuppressWarnings("serial")
+    public static class TestServlet extends HttpServlet {
 
-        Request request = new Request.Builder()
-              .url(HELLO_URL)
-              .build();
-
-        Response response = client.newCall(request).execute();
-        
-        assertEquals(200, response.code());
-    }
-
-    public static class HelloHandler extends AbstractHandler {
-    
         @Override
-        public void handle(String target, org.eclipse.jetty.server.Request baseRequest, HttpServletRequest request,
-                HttpServletResponse response) throws IOException, ServletException {
-            response.setContentType("text/html;charset=utf-8");
-            if (request.getHeader(TEST_FAULT_HEADER_FLAG) != null) {
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            } else {
-                response.setStatus(HttpServletResponse.SC_OK);
-                response.getWriter().println("<h1>Hello World</h1>");                
-            }
-            baseRequest.setHandled(true);
+        public void doGet(HttpServletRequest request, HttpServletResponse response)
+                throws ServletException, IOException {
+            response.setStatus(HttpServletResponse.SC_ACCEPTED);
         }
     }
 

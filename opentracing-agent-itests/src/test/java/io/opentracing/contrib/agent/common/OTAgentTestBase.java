@@ -39,7 +39,7 @@ public class OTAgentTestBase {
         tracer.reset();
     }
 
-    public MockTracer getTracer() {
+    public static MockTracer getTracer() {
         return tracer;
     }
 

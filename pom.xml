@@ -47,10 +47,11 @@
     <version.com.squareup.okhttp3>3.6.0</version.com.squareup.okhttp3>
     <version.io.opentracing>0.20.8</version.io.opentracing>
     <version.io.opentracing.contrib.globaltracer>0.1.0</version.io.opentracing.contrib.globaltracer>
+    <version.io.opentracing.contrib.web-servlet-filter>0.0.3</version.io.opentracing.contrib.web-servlet-filter>
     <version.io.opentracing.contrib.okhttp3>0.0.1</version.io.opentracing.contrib.okhttp3>
     <version.io.opentracing.contrib.spanmanager>0.0.2</version.io.opentracing.contrib.spanmanager>
     <version.junit>4.12</version.junit>
-    <version.org.eclipse.jetty>8.1.15.v20140411</version.org.eclipse.jetty>
+    <version.org.eclipse.jetty>9.4.1.v20170120</version.org.eclipse.jetty>
     <version.org.jboss.byteman>3.0.6</version.org.jboss.byteman>
 
     <version.maven-deploy-plugin>2.8.2</version.maven-deploy-plugin>
@@ -81,6 +82,11 @@
         <groupId>io.opentracing.contrib</groupId>
         <artifactId>opentracing-globaltracer</artifactId>
         <version>${version.io.opentracing.contrib.globaltracer}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.opentracing.contrib</groupId>
+        <artifactId>opentracing-web-servlet-filter</artifactId>
+        <version>${version.io.opentracing.contrib.web-servlet-filter}</version>
       </dependency>
       <dependency>
         <groupId>io.opentracing.contrib</groupId>

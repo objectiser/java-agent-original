@@ -23,6 +23,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import io.opentracing.contrib.agent.common.OTAgentTestBase;
 import io.opentracing.mock.MockSpan;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
@@ -34,7 +35,7 @@ import okhttp3.mockwebserver.MockWebServer;
 /**
  * @author gbrown
  */
-public class OkHttpITest extends io.opentracing.contrib.agent.common.OTAgentTestBase {
+public class OkHttpITest extends OTAgentTestBase {
 
     @Test
     public void testRequest() throws IOException {

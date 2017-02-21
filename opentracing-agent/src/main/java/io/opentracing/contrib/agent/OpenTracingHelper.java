@@ -41,6 +41,8 @@ public class OpenTracingHelper extends Helper {
     private static Map<Object,Span> spanCache = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
     private static Map<Object,Span> finished = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
 
+    private static Map<Object,Integer> state = Collections.synchronizedMap(new WeakHashMap<Object,Integer>());
+
     public OpenTracingHelper(Rule rule) {
         super(rule);
     }
@@ -87,4 +89,12 @@ public class OpenTracingHelper extends Helper {
     }
     /**********************************************/
 
+    public void setState(Object key, int value) {
+        state.put(key, new Integer(value));
+    }
+
+    public int getState(Object key) {
+        Integer value = state.get(key);
+        return value == null ? 0 : value.intValue();
+    }
 }
