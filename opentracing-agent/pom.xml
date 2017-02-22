@@ -44,7 +44,13 @@
           </descriptors>
           <appendAssemblyId>false</appendAssemblyId>
           <archive>
-            <manifestFile>src/main/resources/META-INF/MANIFEST.MF</manifestFile>
+            <manifestEntries>
+              <Agent-Class>io.opentracing.contrib.agent.OpenTracingAgent</Agent-Class>
+              <Premain-Class>io.opentracing.contrib.agent.OpenTracingAgent</Premain-Class>
+              <Can-Redefine-Classes>true</Can-Redefine-Classes>
+              <Can-Retransform-Classes>true</Can-Retransform-Classes>
+              <Boot-Class-Path>./${project.artifactId}.jar</Boot-Class-Path>
+            </manifestEntries>
           </archive>
         </configuration>
         <executions>

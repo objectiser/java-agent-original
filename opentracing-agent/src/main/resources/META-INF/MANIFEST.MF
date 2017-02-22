@@ -1,5 +1,0 @@
-Agent-Class: io.opentracing.contrib.agent.OpenTracingAgent
-Can-Redefine-Classes: true
-Can-Retransform-Classes: true
-Premain-Class: io.opentracing.contrib.agent.OpenTracingAgent
-Boot-Class-Path: ./opentracing-agent.jar
