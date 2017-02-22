@@ -9,7 +9,7 @@ define a set of rules. These rules can be used in three ways:
 
 * Directly instrument a technology/framework (e.g. java.net.HttpURLConnection)
 
-* Install a framework integration (e.g. OkHttp3)
+* Install a framework integration (e.g. OkHttp)
 
 * Define custom rules specific to an application (e.g. create spans to scope important internal units of work,
 or add tags to an existing span to identify business relevant properties)
@@ -36,6 +36,66 @@ This approach is useful when wanting to instrument applications where modificati
 possible (e.g. executable jars), or wanting to maintain separation between the application and the tracing
 mechanism.
 
+
+### Creating custom rules
+
+Custom rules are defined using the [ByteMan](http://byteman.jboss.org/) rule format. These rules use
+a helper class (_io.opentracing.contrib.agent.OpenTracingHelper_) that provides access to the OpenTracing Tracer,
+as well as some additional support capabilities.
+
+The example rules should be placed in a folder on the classpath called `otagent`, and have the file extension
+`btm`.
+
+Some example rules are:
+
+```
+RULE Custom instrumentation rule sayHello entry
+CLASS example.MyClass
+METHOD sayHello()
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+AT ENTRY
+IF TRUE
+DO
+  manageSpan(getTracer().buildSpan("MySpan").start());
+ENDRULE
+```
+
+The first line defines the name of the rule. The second identifies the target class, although it is also
+possibly to specify an interface. The third line identifies the method name (optionally specifying the
+parameter types).
+
+The _AT_ clause identifies the point at which the identifed method will be instrumented. _ENTRY_ means that
+the rule should be applied at the beginning of the method (see ByteMan documentation for other locations).
+
+The _IF_ statement enables a predicate to be defined to guard whether the rule is performed.
+
+The _DO_ clause identifies the actions to be performed when the rule is triggered.
+
+The `getTracer()` method provides access to the OpenTracing compliant `Tracer`. The helper provides methods
+for managing the current active span (i.e. `manageSpan`).
+
+NOTE: Span management is being actively discussed in the OpenTracing standard so this area may change in the
+near future.
+
+```
+RULE Custom instrumentation rule sayHello exit
+CLASS example.MyClass
+METHOD sayHello()
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+AT EXIT
+IF currentSpan() != null
+DO
+  currentSpan().setTag("status.code","OK").finish();
+  releaseCurrentSpan();
+ENDRULE
+```
+This rule will trigger _AT EXIT_, so when the method is finished. The _IF_ statement checks whether there
+is a current span, so will only trigger if an active span exists.
+
+The actions performed in this case are to set a tag _status.code_ on the current span, and then finish it.
+Finally the current span needs to be released so that it is no longer considered the active span.
+
+
 ## Supported framework integrations
 
 NOTE: Currently the ByteMan rules for installing tracing filters/interceptors into the following frameworks
@@ -43,7 +103,7 @@ is contained in this agent. However in the future the aim would be to move the r
 integration projects, meaning that the rules would be detected only when the integration artifact is added to
 the classpath.
 
-* [Servlet](https://github.com/opentracing-contrib/java-web-servlet-filter)
+* [Servlet](https://github.com/opentracing-contrib/java-web-servlet-filter) Currently supported containers:
   * Jetty
 
 * [OkHttp](https://github.com/opentracing-contrib/java-okhttp)
