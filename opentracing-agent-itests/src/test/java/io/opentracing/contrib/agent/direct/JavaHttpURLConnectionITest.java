@@ -21,6 +21,7 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
@@ -80,6 +81,25 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
         sendRequestUsingInputStream("POST", false);
     }
 
+    @Test
+    public void testHttpURLConnectionRefused() throws MalformedURLException {
+        URL url = new URL("http://localhost:9876/invalid");
+        try {
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+
+            connection.setRequestMethod("GET");
+            connection.setDoOutput(true);
+            connection.setUseCaches(false);
+            connection.setAllowUserInteraction(false);
+
+            connection.getResponseCode();
+        } catch (Exception e) {
+            // Ignore
+        }
+
+        verifyTrace(url, "GET", -1);
+    }
+
     protected void testHttpRequestConnect(String method, boolean fault) throws IOException {
         sendRequest(method, fault, true);
     }
@@ -122,7 +142,7 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
             // Call again to make sure does not attempt to finish the span again
             connection.getResponseCode();
 
-            verifyTrace(httpUrl.url(), method, fault);
+            verifyTrace(httpUrl.url(), method, status);
         } finally {
             server.shutdown();
             server.close();
@@ -166,19 +186,24 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
             // Call again to make sure does not attempt to finish the span again
             connection.getResponseCode();
 
-            verifyTrace(httpUrl.url(), method, fault);
+            verifyTrace(httpUrl.url(), method, status);
         } finally {
             server.shutdown();
             server.close();
         }
     }
 
-    protected void verifyTrace(URL url, String method, boolean fault) {
+    protected void verifyTrace(URL url, String method, int statusCode) {
         List<MockSpan> spans = getTracer().finishedSpans();
         assertEquals(1, spans.size());
         assertEquals(method, spans.get(0).operationName());
         assertEquals(url.toString(), spans.get(0).tags().get(Tags.HTTP_URL.getKey()));
-        assertEquals(fault ? 401 : 200, spans.get(0).tags().get(Tags.HTTP_STATUS.getKey()));
+        if (statusCode != -1) {
+            assertEquals(statusCode, spans.get(0).tags().get(Tags.HTTP_STATUS.getKey()));
+        }
+        if (statusCode != 200) {
+            assertEquals(true, spans.get(0).tags().get(Tags.ERROR.getKey()));
+        }
     }
 
 }
