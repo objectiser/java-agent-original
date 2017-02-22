@@ -8,11 +8,9 @@ CLASS ^java.net.HttpURLConnection
 METHOD connect()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-# Need to filter out use of HttpURLConnection by OpenTracing tracer, and also only use top level calls to the connection
-# as connect is also called internally
-IF !$0.connected && retrieveSpan($0) == null && !callerMatches("HttpURLConnection.*",true)
+IF !$0.connected && retrieveSpan($0) == null
 DO
-  cacheSpan($0, getTracer().buildSpan($0.getRequestMethod())
+  associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
   		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
   		.withTag("http.query", $0.getURL().getQuery())
   		.start());
@@ -25,11 +23,9 @@ CLASS java.net.HttpURLConnection
 METHOD getResponseCode()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-# Need to filter out use of HttpURLConnection by OpenTracing tracer, and also only use top level calls to the connection
-# as getStatusCode is also called internally
-IF !$0.connected && retrieveSpan($0) == null && !callerMatches("HttpURLConnection.*",true)
+IF !$0.connected && retrieveSpan($0) == null
 DO
-  cacheSpan($0, getTracer().buildSpan($0.getRequestMethod())
+  associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
   		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
   		.withTag("http.query", $0.getURL().getQuery())
   		.start());
@@ -42,10 +38,9 @@ CLASS ^java.net.HttpURLConnection
 METHOD getInputStream()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-# Need to filter out use of HttpURLConnection by OpenTracing tracer, and also only use top level calls to the connection
-IF !$0.connected && retrieveSpan($0) == null && !callerMatches("HttpURLConnection.*",true)
+IF !$0.connected && retrieveSpan($0) == null
 DO
-  cacheSpan($0, getTracer().buildSpan($0.getRequestMethod())
+  associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
   		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
   		.withTag("http.query", $0.getURL().getQuery())
   		.start());
@@ -58,10 +53,9 @@ CLASS ^java.net.HttpURLConnection
 METHOD getOutputStream()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-# Need to filter out use of HttpURLConnection by OpenTracing tracer, and also only use top level calls to the connection
-IF !$0.connected && retrieveSpan($0) == null && !callerMatches("HttpURLConnection.*",true)
+IF !$0.connected && retrieveSpan($0) == null
 DO
-  cacheSpan($0, getTracer().buildSpan($0.getRequestMethod())
+  associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
   		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
   		.withTag("http.query", $0.getURL().getQuery())
   		.start());
@@ -69,32 +63,32 @@ DO
         new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
 ENDRULE
 
+# This rule catches connection refused exceptions
 RULE java-net: Java HttpUrlConnection getInputStream exception exit
 CLASS ^java.net.HttpURLConnection
-METHOD getInputStream()
+METHOD getResponseCode()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 BIND
   span : io.opentracing.Span = retrieveSpan($0);
 AT EXCEPTION EXIT
-IF span != null && !isFinished($0) && !callerMatches("HttpURLConnection.*",true)
+IF span != null && !isFinished($0)
 DO
-  span.setTag(io.opentracing.tag.Tags.HTTP_STATUS.getKey(), Integer.valueOf($0.responseCode))
+  span.setTag(io.opentracing.tag.Tags.ERROR.getKey(), true)
     .finish();
   finishedSpan($0,span);
 ENDRULE
 
-#RULE java-net: Java HttpUrlConnection getResponseCode exit (check for fault)
-#CLASS ^java.net.HttpURLConnection
-#METHOD getResponseCode()
-#HELPER io.opentracing.contrib.agent.OpenTracingHelper
-#BIND
-#  span : io.opentracing.Span = retrieveSpan($0);
-#AT EXIT
-#IF span != null && !isFinished($0) && !callerMatches("HttpURLConnection.*",true)
-#		&& $0.responseCode >= 400
-#DO
-#  span.setTag(io.opentracing.tag.Tags.HTTP_STATUS.getKey(), Integer.valueOf($0.responseCode));
-#ENDRULE
+RULE java-net: Java HttpUrlConnection getResponseCode exit (check for fault)
+CLASS ^java.net.HttpURLConnection
+METHOD getResponseCode()
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+BIND
+  span : io.opentracing.Span = retrieveSpan($0);
+AT EXIT
+IF span != null && !isFinished($0) && $0.responseCode >= 400
+DO
+  span.setTag(io.opentracing.tag.Tags.ERROR.getKey(), true);
+ENDRULE
 
 RULE java-net: Java HttpUrlConnection getResponseCode exit
 CLASS ^java.net.HttpURLConnection
@@ -103,7 +97,7 @@ HELPER io.opentracing.contrib.agent.OpenTracingHelper
 BIND
   span : io.opentracing.Span = retrieveSpan($0);
 AT EXIT
-IF span != null && !isFinished($0) && !callerMatches("HttpURLConnection.*",true)
+IF span != null && !isFinished($0)
 DO
   span.setTag(io.opentracing.tag.Tags.HTTP_STATUS.getKey(), Integer.valueOf($0.responseCode))
     .finish();

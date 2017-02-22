@@ -38,7 +38,7 @@ public class OpenTracingHelper extends Helper {
     private Tracer tracer = GlobalTracer.get();
     private SpanManager spanManager = DefaultSpanManager.getInstance();
 
-    private static Map<Object,Span> spanCache = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
+    private static Map<Object,Span> spanAssociations = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
     private static Map<Object,Span> finished = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
 
     private static Map<Object,Integer> state = Collections.synchronizedMap(new WeakHashMap<Object,Integer>());
@@ -56,26 +56,62 @@ public class OpenTracingHelper extends Helper {
         return tracer;
     }
 
+    /**
+     * This method requests that the supplied span becomes the
+     * current 'active' span.
+     *
+     * @param span The span
+     */
     public void manageSpan(Span span) {
         spanManager.manage(span);
     }
 
+    /**
+     * This method returns the currently active span.
+     *
+     * @return The current span, or null if no active span exists
+     */
     public Span currentSpan() {
         return spanManager.current().getSpan();
     }
 
+    /**
+     * This method requests that the current active span
+     * should be released (unmanaged). If the underlying
+     * span management mechanism maintains a stack, then
+     * this will result in the previous (unfinished) parent
+     * span being reinstated as the current active span.
+     *
+     * @return The span being released, or null if no active span found
+     */
     public Span releaseCurrentSpan() {
         ManagedSpan current = spanManager.current();
         current.release();
         return current.getSpan();
     }
 
-    public void cacheSpan(Object key, Span span) {
-        spanCache.put(key, span);
+    /**
+     * This method establishes an association between an application object
+     * (i.e. the subject of the instrumentation) and a span. Once the
+     * application object is no longer being used, the association with the
+     * span will automatically be discarded.
+     *
+     * @param obj The application object to be associated with the span
+     * @param span The span
+     */
+    public void associateSpan(Object obj, Span span) {
+        spanAssociations.put(obj, span);
     }
 
-    public Span retrieveSpan(Object key) {
-        return spanCache.get(key);
+    /**
+     * This method retrieves the span associated with the supplied application
+     * object.
+     *
+     * @param obj The application object
+     * @return The span, or null if no associated span exists
+     */
+    public Span retrieveSpan(Object obj) {
+        return spanAssociations.get(obj);
     }
 
     /**********************************************/
@@ -89,12 +125,28 @@ public class OpenTracingHelper extends Helper {
     }
     /**********************************************/
 
-    public void setState(Object key, int value) {
-        state.put(key, new Integer(value));
+    /**
+     * This method enables an instrumentation rule to record a 'state'
+     * number against an application object. This can be used in
+     * subsequent rules to determine what the valid actions that
+     * can be performed.
+     *
+     * @param obj The application object
+     * @param value The state value
+     */
+    public void setState(Object obj, int value) {
+        state.put(obj, new Integer(value));
     }
 
-    public int getState(Object key) {
-        Integer value = state.get(key);
+    /**
+     * This method retrieves the current 'state' number associated with
+     * the supplied application object.
+     *
+     * @param obj The application object
+     * @return The state, or 0 if no state currently exists
+     */
+    public int getState(Object obj) {
+        Integer value = state.get(obj);
         return value == null ? 0 : value.intValue();
     }
 }
