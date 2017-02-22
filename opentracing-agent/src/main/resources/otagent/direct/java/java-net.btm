@@ -11,11 +11,12 @@ AT ENTRY
 IF !$0.connected && retrieveSpan($0) == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
-  		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
-  		.withTag("http.query", $0.getURL().getQuery())
-  		.start());
+    .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
+    .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
+    .withTag("http.query", $0.getURL().getQuery())
+    .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
-        new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
+    new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
 ENDRULE
 
 RULE java-net: Java HttpUrlConnection getResponseCode entry
@@ -26,11 +27,12 @@ AT ENTRY
 IF !$0.connected && retrieveSpan($0) == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
-  		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
-  		.withTag("http.query", $0.getURL().getQuery())
-  		.start());
+    .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
+    .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
+    .withTag("http.query", $0.getURL().getQuery())
+    .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
-       new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
+     new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
 ENDRULE
 
 RULE java-net: Java HttpUrlConnection getInputStream entry
@@ -41,11 +43,12 @@ AT ENTRY
 IF !$0.connected && retrieveSpan($0) == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
-  		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
-  		.withTag("http.query", $0.getURL().getQuery())
-  		.start());
+    .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
+    .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
+    .withTag("http.query", $0.getURL().getQuery())
+    .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
-        new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
+    new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
 ENDRULE
 
 RULE java-net: Java HttpUrlConnection getOutputStream entry
@@ -56,11 +59,12 @@ AT ENTRY
 IF !$0.connected && retrieveSpan($0) == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
-  		.withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
-  		.withTag("http.query", $0.getURL().getQuery())
-  		.start());
+    .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
+    .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
+    .withTag("http.query", $0.getURL().getQuery())
+    .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
-        new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
+    new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
 ENDRULE
 
 # This rule catches connection refused exceptions

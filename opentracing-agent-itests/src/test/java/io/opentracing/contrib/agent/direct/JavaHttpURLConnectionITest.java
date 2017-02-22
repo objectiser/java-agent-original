@@ -197,6 +197,7 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
         List<MockSpan> spans = getTracer().finishedSpans();
         assertEquals(1, spans.size());
         assertEquals(method, spans.get(0).operationName());
+        assertEquals(Tags.SPAN_KIND_CLIENT, spans.get(0).tags().get(Tags.SPAN_KIND.getKey()));
         assertEquals(url.toString(), spans.get(0).tags().get(Tags.HTTP_URL.getKey()));
         if (statusCode != -1) {
             assertEquals(statusCode, spans.get(0).tags().get(Tags.HTTP_STATUS.getKey()));
