@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentracing.contrib.agent.direct;
+package io.opentracing.contrib.agent.jnet;
 
 import static org.junit.Assert.*;
 

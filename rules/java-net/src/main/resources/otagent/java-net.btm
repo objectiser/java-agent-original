@@ -16,7 +16,7 @@ DO
     .withTag("http.query", $0.getURL().getQuery())
     .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
-    new io.opentracing.contrib.agent.propagation.HttpURLConnectionInjectAdapter($0));
+    new io.opentracing.contrib.agent.jnet.propagation.HttpURLConnectionInjectAdapter($0));
 ENDRULE
 
 RULE java-net: Java HttpUrlConnection getResponseCode entry
