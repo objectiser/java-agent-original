@@ -12,6 +12,7 @@
 
   <modules>
     <module>java-net</module>
+    <module>java-okhttp</module>
   </modules>
 
   <build>
