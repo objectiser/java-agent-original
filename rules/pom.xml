@@ -13,6 +13,7 @@
   <modules>
     <module>java-net</module>
     <module>java-okhttp</module>
+    <module>java-web-servlet-filter</module>
   </modules>
 
   <build>

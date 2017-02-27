@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.opentracing.contrib.agent.integration;
+package io.opentracing.contrib.agent.webservletfilter;
 
 import static org.junit.Assert.assertEquals;
 import java.io.IOException;
