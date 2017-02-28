@@ -8,7 +8,7 @@ CLASS ^java.net.HttpURLConnection
 METHOD connect()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-IF !$0.connected && retrieveSpan($0) == null
+IF !$0.connected && retrieveSpan($0) == null && $0.getRequestProperty("opentracing.ignore") == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
@@ -24,7 +24,7 @@ CLASS java.net.HttpURLConnection
 METHOD getResponseCode()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-IF !$0.connected && retrieveSpan($0) == null
+IF !$0.connected && retrieveSpan($0) == null && $0.getRequestProperty("opentracing.ignore") == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
@@ -40,7 +40,7 @@ CLASS ^java.net.HttpURLConnection
 METHOD getInputStream()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-IF !$0.connected && retrieveSpan($0) == null
+IF !$0.connected && retrieveSpan($0) == null && $0.getRequestProperty("opentracing.ignore") == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
@@ -56,7 +56,7 @@ CLASS ^java.net.HttpURLConnection
 METHOD getOutputStream()
 HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
-IF !$0.connected && retrieveSpan($0) == null
+IF !$0.connected && retrieveSpan($0) == null && $0.getRequestProperty("opentracing.ignore") == null
 DO
   associateSpan($0, getTracer().buildSpan($0.getRequestMethod())
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
