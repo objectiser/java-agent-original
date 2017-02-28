@@ -151,21 +151,39 @@ is contained in this repository. However in the future the aim would be to move 
 integration projects, meaning that the rules would be detected only when the integration artifact is added to
 the classpath.
 
-* [Servlet](https://github.com/opentracing-contrib/java-web-servlet-filter) Currently supported containers:
-  * Jetty
-  * Tomcat
+#### [Servlet](https://github.com/opentracing-contrib/java-web-servlet-filter)
 
-* [OkHttp](https://github.com/opentracing-contrib/java-okhttp)
+Currently supported containers:
+
+* Jetty
+
+* Tomcat
+
+#### [OkHttp](https://github.com/opentracing-contrib/java-okhttp)
 
 ### Directly instrumented technologies
 
-* HttpURLConnection
-  * NOTE: The instrumentation rules for HttpURLConnection will only create a Span if the connection does not
-    have a request property _opentracing.ignore_. This is to avoid REST calls, used to report tracing information
-    to a server, resulting in further trace information being reported. Therefore any _Tracer_ implementations
-    that use HttpURLConnection to report their data to the server should ensure the connections have this request
-    property. It is also possible to include a custom rule to add such a project.
+#### HttpURLConnection
 
+The instrumentation rules for HttpURLConnection will only create a Span if the connection does not
+have a request property _opentracing.ignore_. This is to avoid REST calls, used to report tracing information
+to a server, resulting in further trace information being reported. Therefore any _Tracer_ implementations
+that use HttpURLConnection to report their data to the server should ensure the connections have this request
+property.
+
+It is also possible to include a custom rule to add such a property:
+
+```
+RULE Ignore server communications
+CLASS java.net.URL
+METHOD openConnection
+HELPER io.opentracing.contrib.agent.OpenTracingHelper
+AT EXIT
+IF $0.getPath().startsWith("/TracerServerPath")
+DO
+  $!.setRequestProperty("opentracing.ignore","true");
+ENDRULE
+```
 
 ## Development
 ```shell
