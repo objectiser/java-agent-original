@@ -27,6 +27,40 @@ Tracer and any required framework integrations from the classpath.
 java -javaagent path/to/opentracing-agent.jar ...
 ```
 
+#### Spring Boot Example
+
+If instrumenting a spring-boot application, add the following to the pom.xml:
+
+```xml
+    <!-- OpenTracing Tracer dependencies -->
+    ....
+
+    <!-- OpenTracing Contrib JavaAgent Rules -->
+    <dependency>
+      <groupId>io.opentracing.contrib</groupId>
+      <artifactId>opentracing-agent-rules-java-net</artifactId>
+      <version>...</version>
+    </dependency>
+    <dependency>
+      <groupId>io.opentracing.contrib</groupId>
+      <artifactId>opentracing-agent-rules-java-web-servlet-filter</artifactId>
+      <version>...</version>
+    </dependency>
+
+    <!-- OpenTracing Contrib Framework Integrations -->
+    <dependency>
+      <groupId>io.opentracing.contrib</groupId>
+      <artifactId>opentracing-web-servlet-filter</artifactId>
+      <version>...</version>
+    </dependency>
+```
+
+and then launch the application using
+
+```
+mvn spring-boot:run -Drun.jvmArguments=-javaagent:/path/to/opentracing-agent.jar
+```
+
 ### Uber Jar
 
 The other approach is to build an uber jar, using the maven assembly plugin, to package together
@@ -37,7 +71,7 @@ possible (e.g. executable jars), or wanting to maintain separation between the a
 mechanism.
 
 
-### Creating custom rules
+## Creating custom rules
 
 Custom rules are defined using the [ByteMan](http://byteman.jboss.org/) rule format. These rules use
 a helper class (_io.opentracing.contrib.agent.OpenTracingHelper_) that provides access to the OpenTracing Tracer,
@@ -105,6 +139,7 @@ the classpath.
 
 * [Servlet](https://github.com/opentracing-contrib/java-web-servlet-filter) Currently supported containers:
   * Jetty
+  * Tomcat
 
 * [OkHttp](https://github.com/opentracing-contrib/java-okhttp)
 
