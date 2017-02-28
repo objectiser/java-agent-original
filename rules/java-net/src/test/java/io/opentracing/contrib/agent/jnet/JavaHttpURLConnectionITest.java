@@ -100,15 +100,20 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
         verifyTrace(url, "GET", -1);
     }
 
+    @Test
+    public void testHttpURLConnectionConnectGETIgnored() throws IOException {
+        sendRequest("GET", false, true, true);
+    }
+
     protected void testHttpRequestConnect(String method, boolean fault) throws IOException {
-        sendRequest(method, fault, true);
+        sendRequest(method, fault, true, false);
     }
 
     protected void testHttpRequestGetStatusCode(String method, boolean fault) throws IOException {
-        sendRequest(method, fault, false);
+        sendRequest(method, fault, false, false);
     }
 
-    protected void sendRequest(String method, boolean fault, boolean connect) throws IOException {
+    protected void sendRequest(String method, boolean fault, boolean connect, boolean ignore) throws IOException {
         MockWebServer server = new MockWebServer();
 
         try {
@@ -121,6 +126,10 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
             HttpUrl httpUrl = server.url("/hello");
 
             HttpURLConnection connection = (HttpURLConnection) httpUrl.url().openConnection();
+
+            if (ignore) {
+                connection.setRequestProperty("opentracing.ignore", "");
+            }
 
             connection.setRequestMethod(method);
             connection.setDoOutput(true);
@@ -142,7 +151,11 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
             // Call again to make sure does not attempt to finish the span again
             connection.getResponseCode();
 
-            verifyTrace(httpUrl.url(), method, status);
+            if (!ignore) {
+                verifyTrace(httpUrl.url(), method, status);
+            } else {
+                assertTrue(getTracer().finishedSpans().isEmpty());
+            }
         } finally {
             server.shutdown();
             server.close();
