@@ -49,7 +49,7 @@
     <version.io.opentracing.contrib.globaltracer>0.1.0</version.io.opentracing.contrib.globaltracer>
     <version.io.opentracing.contrib.web-servlet-filter>0.0.3</version.io.opentracing.contrib.web-servlet-filter>
     <version.io.opentracing.contrib.okhttp3>0.0.1</version.io.opentracing.contrib.okhttp3>
-    <version.io.opentracing.contrib.spanmanager>0.0.2</version.io.opentracing.contrib.spanmanager>
+    <version.io.opentracing.contrib.spanmanager>0.0.3</version.io.opentracing.contrib.spanmanager>
     <version.junit>4.12</version.junit>
     <version.org.eclipse.jetty>9.4.1.v20170120</version.org.eclipse.jetty>
     <version.org.jboss.byteman>3.0.6</version.org.jboss.byteman>

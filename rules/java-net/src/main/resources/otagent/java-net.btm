@@ -14,6 +14,7 @@ DO
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
     .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
     .withTag("http.query", $0.getURL().getQuery())
+    .asChildOf(currentSpan())
     .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
     new io.opentracing.contrib.agent.jnet.propagation.HttpURLConnectionInjectAdapter($0));
@@ -30,6 +31,7 @@ DO
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
     .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
     .withTag("http.query", $0.getURL().getQuery())
+    .asChildOf(currentSpan())
     .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
      new io.opentracing.contrib.agent.jnet.propagation.HttpURLConnectionInjectAdapter($0));
@@ -46,6 +48,7 @@ DO
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
     .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
     .withTag("http.query", $0.getURL().getQuery())
+    .asChildOf(currentSpan())
     .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
     new io.opentracing.contrib.agent.jnet.propagation.HttpURLConnectionInjectAdapter($0));
@@ -62,6 +65,7 @@ DO
     .withTag(io.opentracing.tag.Tags.SPAN_KIND.getKey(), io.opentracing.tag.Tags.SPAN_KIND_CLIENT)
     .withTag(io.opentracing.tag.Tags.HTTP_URL.getKey(), $0.getURL().toString())
     .withTag("http.query", $0.getURL().getQuery())
+    .asChildOf(currentSpan())
     .start());
   getTracer().inject(retrieveSpan($0).context(), io.opentracing.propagation.Format$Builtin.HTTP_HEADERS,
     new io.opentracing.contrib.agent.jnet.propagation.HttpURLConnectionInjectAdapter($0));

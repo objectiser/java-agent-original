@@ -1,5 +1,5 @@
 /*
- * Copyright 2015-2017 Red Hat, Inc. and/or its affiliates
+ * Copyright 2017 Red Hat, Inc. and/or its affiliates
  * and other contributors as indicated by the @author tags.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,25 +18,29 @@ package io.opentracing.contrib.agent;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
 
 import io.opentracing.Span;
+import io.opentracing.SpanContext;
 import io.opentracing.Tracer;
+import io.opentracing.Tracer.SpanBuilder;
 import io.opentracing.contrib.global.GlobalTracer;
 import io.opentracing.contrib.spanmanager.DefaultSpanManager;
 import io.opentracing.contrib.spanmanager.SpanManager;
 import io.opentracing.contrib.spanmanager.SpanManager.ManagedSpan;
+import io.opentracing.propagation.Format;
 
 /**
  * This class provides helper capabilities to the byteman rules.
  */
 public class OpenTracingHelper extends Helper {
 
-    private Tracer tracer = GlobalTracer.get();
-    private SpanManager spanManager = DefaultSpanManager.getInstance();
+    private static Tracer tracer = new AgentTracer(GlobalTracer.get());
+    private static SpanManager spanManager = DefaultSpanManager.getInstance();
 
     private static Map<Object,Span> spanAssociations = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
     private static Map<Object,Span> finished = Collections.synchronizedMap(new WeakHashMap<Object,Span>());
@@ -62,8 +66,8 @@ public class OpenTracingHelper extends Helper {
      *
      * @param span The span
      */
-    public void manageSpan(Span span) {
-        spanManager.manage(span);
+    public void activateSpan(Span span) {
+        spanManager.activate(span);
     }
 
     /**
@@ -77,16 +81,16 @@ public class OpenTracingHelper extends Helper {
 
     /**
      * This method requests that the current active span
-     * should be released (unmanaged). If the underlying
+     * should be deactivated. If the underlying
      * span management mechanism maintains a stack, then
      * this will result in the previous (unfinished) parent
      * span being reinstated as the current active span.
      *
-     * @return The span being released, or null if no active span found
+     * @return The span being deactivated, or null if no active span found
      */
-    public Span releaseCurrentSpan() {
+    public Span deactivateCurrentSpan() {
         ManagedSpan current = spanManager.current();
-        current.release();
+        current.deactivate();
         return current.getSpan();
     }
 
@@ -148,5 +152,103 @@ public class OpenTracingHelper extends Helper {
     public int getState(Object obj) {
         Integer value = state.get(obj);
         return value == null ? 0 : value.intValue();
+    }
+
+    /**
+     * Proxy tracer used for one purpose - to enable the rules to define a
+     * ChildOf relationship without being concerned whether the supplied Span
+     * is null. If the spec (and Tracer implementations) are updated to
+     * indicate a null should be ignored, then this proxy can be removed.
+     */
+    public static class AgentTracer implements Tracer {
+
+        private Tracer tracer;
+
+        public AgentTracer(Tracer tracer) {
+            this.tracer = tracer;
+        }
+
+        @Override
+        public SpanBuilder buildSpan(String operation) {
+            return new AgentSpanBuilder(tracer.buildSpan(operation));
+        }
+
+        @Override
+        public <C> SpanContext extract(Format<C> format, C carrier) {
+            return tracer.extract(format, carrier);
+        }
+
+        @Override
+        public <C> void inject(SpanContext ctx, Format<C> format, C carrier) {
+            tracer.inject(ctx, format, carrier);
+        }
+    }
+
+    public static class AgentSpanBuilder implements SpanBuilder {
+
+        private SpanBuilder spanBuilder;
+
+        public AgentSpanBuilder(SpanBuilder spanBuilder) {
+            this.spanBuilder = spanBuilder;
+        }
+
+        @Override
+        public Iterable<Entry<String, String>> baggageItems() {
+            return spanBuilder.baggageItems();
+        }
+
+        @Override
+        public SpanBuilder addReference(String type, SpanContext ctx) {
+            if (ctx != null) {
+                spanBuilder.addReference(type, ctx);
+            }
+            return this;
+        }
+
+        @Override
+        public SpanBuilder asChildOf(SpanContext ctx) {
+            if (ctx != null) {
+                spanBuilder.asChildOf(ctx);
+            }
+            return this;
+        }
+
+        @Override
+        public SpanBuilder asChildOf(Span span) {
+            if (span != null) {
+                spanBuilder.asChildOf(span);
+            }
+            return this;
+        }
+
+        @Override
+        public Span start() {
+            return spanBuilder.start();
+        }
+
+        @Override
+        public SpanBuilder withStartTimestamp(long ts) {
+            spanBuilder.withStartTimestamp(ts);
+            return this;
+        }
+
+        @Override
+        public SpanBuilder withTag(String name, String value) {
+            spanBuilder.withTag(name, value);
+            return this;
+        }
+
+        @Override
+        public SpanBuilder withTag(String name, boolean value) {
+            spanBuilder.withTag(name, value);
+            return this;
+        }
+
+        @Override
+        public SpanBuilder withTag(String name, Number value) {
+            spanBuilder.withTag(name, value);
+            return this;
+        }
+
     }
 }

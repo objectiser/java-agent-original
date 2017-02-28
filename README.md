@@ -64,7 +64,7 @@ mvn spring-boot:run -Drun.jvmArguments=-javaagent:/path/to/opentracing-agent.jar
 ### Uber Jar
 
 The other approach is to build an uber jar, using the maven assembly plugin, to package together
-the `opentracing-agent.jar`, the OpenTracing compliant `Tracer`, any framework integrations, etc.
+the `opentracing-agent.jar`, the OpenTracing compliant `Tracer`, any framework integrations, rules, etc.
 
 This approach is useful when wanting to instrument applications where modification of the classpath is not
 possible (e.g. executable jars), or wanting to maintain separation between the application and the tracing
@@ -90,7 +90,7 @@ HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
 IF TRUE
 DO
-  manageSpan(getTracer().buildSpan("MySpan").start());
+  activateSpan(getTracer().buildSpan("MySpan").start());
 ENDRULE
 ```
 
@@ -106,7 +106,7 @@ The _IF_ statement enables a predicate to be defined to guard whether the rule i
 The _DO_ clause identifies the actions to be performed when the rule is triggered.
 
 The `getTracer()` method provides access to the OpenTracing compliant `Tracer`. The helper provides methods
-for managing the current active span (i.e. `manageSpan`).
+for managing the current active span (i.e. `activateSpan`).
 
 NOTE: Span management is being actively discussed in the OpenTracing standard so this area may change in the
 near future.
@@ -120,17 +120,19 @@ AT EXIT
 IF currentSpan() != null
 DO
   currentSpan().setTag("status.code","OK").finish();
-  releaseCurrentSpan();
+  deactivateCurrentSpan();
 ENDRULE
 ```
 This rule will trigger _AT EXIT_, so when the method is finished. The _IF_ statement checks whether there
 is a current span, so will only trigger if an active span exists.
 
 The actions performed in this case are to set a tag _status.code_ on the current span, and then finish it.
-Finally the current span needs to be released so that it is no longer considered the active span.
+Finally the current span needs to be deactivated so that it is no longer considered the active span.
 
 
-## Supported framework integrations
+## Supported framework integrations and directly instrumented technologies
+
+### Frameworks
 
 NOTE: Currently the ByteMan rules for installing tracing filters/interceptors into the following frameworks
 is contained in this agent. However in the future the aim would be to move the rules to their associated framework
@@ -142,6 +144,11 @@ the classpath.
   * Tomcat
 
 * [OkHttp](https://github.com/opentracing-contrib/java-okhttp)
+
+### Directly instrumented technologies
+
+* HttpURLConnection
+
 
 ## Development
 ```shell

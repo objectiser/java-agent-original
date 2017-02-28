@@ -6,7 +6,7 @@ HELPER io.opentracing.contrib.agent.OpenTracingHelper
 AT ENTRY
 IF TRUE
 DO
-  manageSpan(getTracer().buildSpan("TestSpan").start());
+  activateSpan(getTracer().buildSpan("TestSpan").start());
 ENDRULE
 
 RULE Custom instrumentation rule sayHello exit
@@ -17,5 +17,5 @@ AT EXIT
 IF currentSpan() != null
 DO
   currentSpan().setTag("status.code","OK").finish();
-  releaseCurrentSpan();
+  deactivateCurrentSpan();
 ENDRULE
