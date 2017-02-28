@@ -39,7 +39,7 @@ import okhttp3.Response;
 /**
  * @author gbrown
  */
-public class ServletITest extends OTAgentTestBase {
+public class JettyServletITest extends OTAgentTestBase {
 
     // jetty starts on random port
     private int serverPort;
