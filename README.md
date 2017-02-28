@@ -9,19 +9,25 @@ define a set of rules. These rules can be used in three ways:
 
 * Directly instrument a technology/framework (e.g. java.net.HttpURLConnection)
 
-* Install a framework integration (e.g. OkHttp)
+* Install a framework integration (e.g. OkHttp, Servlet)
 
 * Define custom rules specific to an application (e.g. create spans to scope important internal units of work,
 or add tags to an existing span to identify business relevant properties)
 
 ## Usage
 
+The _Java Agent for OpenTracing_ obtains an OpenTracing compliant Tracer using the
+[Global Tracer](https://github.com/opentracing-contrib/java-globaltracer) project. It makes use of the
+[Span Manager](https://github.com/opentracing-contrib/java-spanmanager) project to manage the
+propagation of active Spans through various frameworks and technologies used by the application - which
+can also be used by the application code to access the current active span to add tags or create its own Spans.
+
 The Java Agent can be used in two ways:
 
 ### Tracer and Framework Integrations on Class Path
 
 This approach uses the plain `opentracing-agent.jar` provided by this project, and obtains the OpenTracing
-Tracer and any required framework integrations from the classpath.
+Tracer and any required framework integrations, rules, etc. from the classpath.
 
 ```java
 java -javaagent path/to/opentracing-agent.jar ...
@@ -35,7 +41,9 @@ If instrumenting a spring-boot application, add the following to the pom.xml:
     <!-- OpenTracing Tracer dependencies -->
     ....
 
-    <!-- OpenTracing Contrib JavaAgent Rules -->
+    <!-- OpenTracing Contrib JavaAgent Rules for any directly instrumented technologies
+         (and framework integrations currently until the rules are moved into the
+         framework integration artifacts) -->
     <dependency>
       <groupId>io.opentracing.contrib</groupId>
       <artifactId>opentracing-agent-rules-java-net</artifactId>
@@ -47,7 +55,7 @@ If instrumenting a spring-boot application, add the following to the pom.xml:
       <version>...</version>
     </dependency>
 
-    <!-- OpenTracing Contrib Framework Integrations -->
+    <!-- OpenTracing Contrib Framework Integrations for the frameworks used by the application -->
     <dependency>
       <groupId>io.opentracing.contrib</groupId>
       <artifactId>opentracing-web-servlet-filter</artifactId>
@@ -65,6 +73,9 @@ mvn spring-boot:run -Drun.jvmArguments=-javaagent:/path/to/opentracing-agent.jar
 
 The other approach is to build an uber jar, using the maven assembly plugin, to package together
 the `opentracing-agent.jar`, the OpenTracing compliant `Tracer`, any framework integrations, rules, etc.
+
+The important point to remember is that, because the resulting jar will still be used as a javaagent, it needs the
+manifest entries copied from the manifest in the `opentracing-agent.jar`.
 
 This approach is useful when wanting to instrument applications where modification of the classpath is not
 possible (e.g. executable jars), or wanting to maintain separation between the application and the tracing
@@ -95,18 +106,19 @@ ENDRULE
 ```
 
 The first line defines the name of the rule. The second identifies the target class, although it is also
-possibly to specify an interface. The third line identifies the method name (optionally specifying the
-parameter types).
+possibly to specify an interface (using the _INTERFACE_ keyword). The third line identifies the method
+name (optionally specifying the parameter types).
 
-The _AT_ clause identifies the point at which the identifed method will be instrumented. _ENTRY_ means that
+The _AT_ clause identifies the point at which the identified method will be instrumented. _ENTRY_ means that
 the rule should be applied at the beginning of the method (see ByteMan documentation for other locations).
 
 The _IF_ statement enables a predicate to be defined to guard whether the rule is performed.
 
 The _DO_ clause identifies the actions to be performed when the rule is triggered.
 
-The `getTracer()` method provides access to the OpenTracing compliant `Tracer`. The helper provides methods
-for managing the current active span (i.e. `activateSpan`).
+The `getTracer()` method (provided by the _OpenTracingHelper_) is used to access the OpenTracing
+compliant `Tracer`. The helper class also provides methods for managing the current active span
+(i.e. `activateSpan`).
 
 NOTE: Span management is being actively discussed in the OpenTracing standard so this area may change in the
 near future.
@@ -135,7 +147,7 @@ Finally the current span needs to be deactivated so that it is no longer conside
 ### Frameworks
 
 NOTE: Currently the ByteMan rules for installing tracing filters/interceptors into the following frameworks
-is contained in this agent. However in the future the aim would be to move the rules to their associated framework
+is contained in this repository. However in the future the aim would be to move the rules to their associated framework
 integration projects, meaning that the rules would be detected only when the integration artifact is added to
 the classpath.
 
@@ -148,6 +160,11 @@ the classpath.
 ### Directly instrumented technologies
 
 * HttpURLConnection
+  * NOTE: The instrumentation rules for HttpURLConnection will only create a Span if the connection does not
+    have a request property _opentracing.ignore_. This is to avoid REST calls, used to report tracing information
+    to a server, resulting in further trace information being reported. Therefore any _Tracer_ implementations
+    that use HttpURLConnection to report their data to the server should ensure the connections have this request
+    property. It is also possible to include a custom rule to add such a project.
 
 
 ## Development
