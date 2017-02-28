@@ -151,7 +151,9 @@ is contained in this repository. However in the future the aim would be to move 
 integration projects, meaning that the rules would be detected only when the integration artifact is added to
 the classpath.
 
-#### [Servlet](https://github.com/opentracing-contrib/java-web-servlet-filter)
+#### Servlet
+
+Framework integration repo: [Web Servlet Filter](https://github.com/opentracing-contrib/java-web-servlet-filter)
 
 Currently supported containers:
 
@@ -159,7 +161,11 @@ Currently supported containers:
 
 * Tomcat
 
-#### [OkHttp](https://github.com/opentracing-contrib/java-okhttp)
+
+#### OkHttp
+
+Framework integration repo: [OkHttp](https://github.com/opentracing-contrib/java-okhttp)
+
 
 ### Directly instrumented technologies
 
