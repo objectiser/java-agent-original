@@ -42,14 +42,14 @@ import okhttp3.Response;
  */
 public class TomcatServletITest extends OTAgentTestBase {
 
-    // jetty starts on random port
-    private int serverPort = 8080;
+    private int serverPort = 9786;
 
     protected Tomcat tomcatServer;
 
     @Before
     public void beforeTest() throws Exception {
         tomcatServer = new Tomcat();
+        tomcatServer.setPort(serverPort);
         
         File baseDir = new File("tomcat");
         tomcatServer.setBaseDir(baseDir.getAbsolutePath());
@@ -64,7 +64,7 @@ public class TomcatServletITest extends OTAgentTestBase {
         appContext.addServletMappingDecoded("/hello", "helloWorldServlet");
 
         tomcatServer.start();
-        System.out.println("Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + 8080 + "/");
+        System.out.println("Tomcat server: http://" + tomcatServer.getHost().getName() + ":" + serverPort + "/");
     }
 
     @After
