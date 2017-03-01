@@ -34,6 +34,12 @@ import okhttp3.HttpUrl;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 
+/**
+ * This class tests various ways of initiating a HTTP request, using
+ * the java.net.HttpURLConnection, against an OkHttp mock server, to
+ * verify that the ByteMan rules are correctly creating a Span to
+ * represent the client side of the HTTP invocation.
+ */
 public class JavaHttpURLConnectionITest extends OTAgentTestBase {
 
     @Test

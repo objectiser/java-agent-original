@@ -24,7 +24,7 @@ can also be used by the application code to access the current active span to ad
 
 The Java Agent can be used in two ways:
 
-### Tracer and Framework Integrations on Class Path
+### Tracer and Framework Integrations on Classpath
 
 This approach uses the plain `opentracing-agent.jar` provided by this project, and obtains the OpenTracing
 Tracer and any required framework integrations, rules, etc. from the classpath.
@@ -35,7 +35,7 @@ java -javaagent path/to/opentracing-agent.jar ...
 
 #### Spring Boot Example
 
-If instrumenting a spring-boot application, add the following to the pom.xml:
+If instrumenting a Spring Boot application, add the following to the pom.xml:
 
 ```xml
     <!-- OpenTracing Tracer dependencies -->
