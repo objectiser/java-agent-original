@@ -16,10 +16,13 @@
  */
 package io.opentracing.contrib.agent;
 
+import java.net.HttpURLConnection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jboss.byteman.rule.Rule;
 import org.jboss.byteman.rule.helper.Helper;
@@ -38,6 +41,8 @@ import io.opentracing.propagation.Format;
  * This class provides helper capabilities to the byteman rules.
  */
 public class OpenTracingHelper extends Helper {
+
+    private static final Logger log = Logger.getLogger(OpenTracingHelper.class.getName());
 
     private static Tracer tracer = new AgentTracer(GlobalTracer.get());
     private static SpanManager spanManager = DefaultSpanManager.getInstance();
@@ -152,6 +157,32 @@ public class OpenTracingHelper extends Helper {
     public int getState(Object obj) {
         Integer value = state.get(obj);
         return value == null ? 0 : value.intValue();
+    }
+
+    /**
+     * This method determines whether the instrumentation point,
+     * associated with the supplied object, should be ignored.
+     *
+     * @param obj The instrumentation target
+     * @return Whether the instrumentation point should be ignored
+     */
+    public boolean ignore(Object obj) {
+        boolean ignore = false;
+
+        if (obj instanceof HttpURLConnection) {
+            String value = ((HttpURLConnection)obj).getRequestProperty("opentracing.ignore");
+            ignore = value != null && value.equalsIgnoreCase("true");
+        }
+
+        // TODO: If other technologies need to use this feature,
+        // then create an Adapter to wrap the specifics of each
+        // technology and provide access to their properties
+
+        if (ignore && log.isLoggable(Level.FINEST)) {
+            log.finest("Ignoring request because the property [opentracing.ignore] is present.");
+        }
+
+        return ignore;
     }
 
     /**

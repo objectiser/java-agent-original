@@ -134,7 +134,7 @@ public class JavaHttpURLConnectionITest extends OTAgentTestBase {
             HttpURLConnection connection = (HttpURLConnection) httpUrl.url().openConnection();
 
             if (ignore) {
-                connection.setRequestProperty("opentracing.ignore", "");
+                connection.setRequestProperty("opentracing.ignore", "True");
             }
 
             connection.setRequestMethod(method);
