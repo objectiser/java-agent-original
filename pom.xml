@@ -51,6 +51,7 @@
     <version.io.opentracing.contrib.okhttp3>0.0.1</version.io.opentracing.contrib.okhttp3>
     <version.io.opentracing.contrib.spanmanager>0.0.3</version.io.opentracing.contrib.spanmanager>
     <version.junit>4.12</version.junit>
+    <version.org.apache.tomcat.embed>8.0.41</version.org.apache.tomcat.embed>
     <version.org.eclipse.jetty>9.4.1.v20170120</version.org.eclipse.jetty>
     <version.org.jboss.byteman>3.0.6</version.org.jboss.byteman>
 
@@ -122,6 +123,16 @@
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-servlet</artifactId>
         <version>${version.org.eclipse.jetty}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-core</artifactId>
+        <version>${version.org.apache.tomcat.embed}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.tomcat.embed</groupId>
+        <artifactId>tomcat-embed-jasper</artifactId>
+        <version>${version.org.apache.tomcat.embed}</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
